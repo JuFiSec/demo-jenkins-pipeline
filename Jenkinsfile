@@ -1,45 +1,44 @@
 pipeline {
-    // Utiliser une image Docker spécifique (contient Maven et JDK)
-    agent {
-        docker {
-            image 'maven:3.9-jdk17'
-        }
-    }
-
+    agent any
+    
     stages {
         stage('Checkout') {
             steps {
-                echo "Code cloné depuis GitHub."
-                // Le pipeline gère le clonage du code automatiquement
+                echo 'Clonage du dépôt GitHub...'
+                checkout scm
             }
         }
         
-        stage('Build & Test') {
+        stage('Build & Test with Docker') {
             steps {
-                echo 'Démarrage de la compilation et des tests...'
-                // La commande est exécutée à la racine du workspace, à l'intérieur du conteneur Maven.
-                sh 'mvn clean package'
+                echo 'Compilation et tests avec Maven dans Docker...'
+                sh '''
+                    docker run --rm \
+                    -v "${WORKSPACE}":/app \
+                    -w /app \
+                    maven:3.8.6-openjdk-11 \
+                    mvn clean test
+                '''
             }
         }
-    
-        stage('Report') {
+        
+        stage('Publish Test Results') {
             steps {
-                echo 'Publication des résultats JUnit.'
-                // Publie les résultats des tests
-                junit 'target/surefire-reports/*.xml'
+                echo 'Publication des résultats de tests...'
+                junit '**/target/surefire-reports/*.xml'
             }
         }
     }
     
     post {
-        always {
-            echo 'Fin du pipeline. Vérification du statut...'
-        }
         success {
-            echo 'Pipeline terminé avec SUCCÈS.'
+            echo '✅ Pipeline exécuté avec succès !'
         }
         failure {
-            echo 'Pipeline terminé en ÉCHEC. Voir les résultats de tests.'
+            echo '❌ Le pipeline a échoué.'
+        }
+        always {
+            echo '🔚 Nettoyage terminé.'
         }
     }
 }
