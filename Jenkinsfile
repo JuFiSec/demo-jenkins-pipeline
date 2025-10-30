@@ -12,13 +12,16 @@ pipeline {
         stage('Build & Test with Docker') {
             steps {
                 echo 'Compilation et tests avec Maven dans Docker...'
-                sh '''
-                    docker run --rm \
-                    -v "$(pwd)":/app \
-                    -w /app \
-                    maven:3.8.6-openjdk-11 \
-                    mvn clean test
-                '''
+                script {
+                    // Utiliser ${WORKSPACE} pour le bon chemin
+                    sh '''
+                        docker run --rm \
+                        -v "${WORKSPACE}":/app \
+                        -w /app \
+                        maven:3.8.6-openjdk-11 \
+                        mvn clean test
+                    '''
+                }
             }
         }
         
