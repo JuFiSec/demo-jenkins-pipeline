@@ -9,22 +9,24 @@ pipeline {
             }
         }
         
-        stage('Build & Test with Docker') {
+        stage('List Files') {
             steps {
-                echo 'Compilation et tests avec Maven dans Docker...'
-                sh '''
-                    docker run --rm \
-                    -v "${WORKSPACE}":/app \
-                    -w /app \
-                    maven:3.8.6-openjdk-11 \
-                    mvn clean test
-                '''
+                echo 'Contenu du workspace:'
+                sh 'ls -la'
+                sh 'cat pom.xml'
             }
         }
         
-        stage('Publish Test Results') {
+        stage('Build & Test') {
             steps {
-                echo 'Publication des résultats de tests...'
+                echo 'Compilation et tests avec Maven...'
+                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app maven:3.8.6-openjdk-11 mvn clean test'
+            }
+        }
+        
+        stage('Publish Results') {
+            steps {
+                echo 'Publication des résultats...'
                 junit '**/target/surefire-reports/*.xml'
             }
         }
@@ -32,13 +34,10 @@ pipeline {
     
     post {
         success {
-            echo '✅ Pipeline exécuté avec succès !'
+            echo '✅ SUCCÈS !'
         }
         failure {
-            echo '❌ Le pipeline a échoué.'
-        }
-        always {
-            echo '🔚 Nettoyage terminé.'
+            echo '❌ ÉCHEC'
         }
     }
 }
