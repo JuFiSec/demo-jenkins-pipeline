@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.8.6-openjdk-11'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
     
     stages {
         stage('Checkout') {
@@ -14,17 +9,16 @@ pipeline {
             }
         }
         
-        stage('Build') {
+        stage('Build & Test with Docker') {
             steps {
-                echo 'Compilation du code Java avec Maven...'
-                sh 'mvn clean compile'
-            }
-        }
-        
-        stage('Run Tests') {
-            steps {
-                echo 'Exécution des tests avec Maven...'
-                sh 'mvn test'
+                echo 'Compilation et tests avec Maven dans Docker...'
+                sh '''
+                    docker run --rm \
+                    -v "$(pwd)":/app \
+                    -w /app \
+                    maven:3.8.6-openjdk-11 \
+                    mvn clean test
+                '''
             }
         }
         
