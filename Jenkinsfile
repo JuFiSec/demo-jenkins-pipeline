@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    tools {
+        maven 'Maven 3.9'
+    }
     
     stages {
         stage('Checkout') {
@@ -9,18 +13,17 @@ pipeline {
             }
         }
         
-        stage('List Files') {
+        stage('compile & test') {
             steps {
-                echo 'Contenu du workspace:'
-                sh 'ls -la'
-                sh 'cat pom.xml'
+                echo 'Compilation et tests avec Maven...'
+                sh 'mvn clean compile'
             }
         }
         
         stage('Build & Test') {
             steps {
                 echo 'Compilation et tests avec Maven...'
-                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app maven:3.8.6-openjdk-11 mvn clean test'
+                sh 'mvn test' 
             }
         }
         
